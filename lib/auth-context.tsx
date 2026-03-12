@@ -105,17 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
-  }
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, isLoading: isLoading || !mounted, signIn, signUp, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )
