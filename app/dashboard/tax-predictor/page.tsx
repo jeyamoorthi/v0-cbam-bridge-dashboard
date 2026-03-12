@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -83,8 +83,8 @@ export default function TaxPredictorPage() {
   const [destinationCountry, setDestinationCountry] = useState("germany")
   const [applyCredits, setApplyCredits] = useState(false)
 
-  const [estimatedTax, setEstimatedTax] = useState(0)
-  const [taxSavings, setTaxSavings] = useState(0)
+  // Use ref to track if we've already updated the store
+  const hasUpdatedRef = useRef(false)
 
   // Handle product type change - reset production method
   const handleProductTypeChange = (value: string) => {
@@ -95,37 +95,46 @@ export default function TaxPredictorPage() {
     }
   }
 
-  // Calculate tax whenever inputs change
-  useEffect(() => {
+  // DERIVED VALUES - no useState needed, prevents infinite loops
+  const { estimatedTax, taxSavings, creditsToApply } = useMemo(() => {
     const product = productTypes.find((p) => p.value === productType)
     const method = productionMethods[productType]?.find((m) => m.value === productionMethod)
     
-    const baseRate = product?.rate || 80
+    const baseRate = product?.rate || 95
     const methodMultiplier = method?.multiplier || 1.0
     
     // Total tax = tonnage × carbon intensity × base rate × method multiplier
     const totalTax = tonnage * carbonIntensity * baseRate * methodMultiplier
     
     // Calculate savings from carbon credits
-    const creditsToApply = applyCredits ? Math.min(availableCredits, tonnage * carbonIntensity) : 0
-    const creditsSavings = creditsToApply * baseRate
+    const credits = applyCredits ? Math.min(availableCredits, tonnage * carbonIntensity) : 0
+    const savings = credits * baseRate
     
-    const finalTax = Math.max(0, totalTax - creditsSavings)
+    const finalTax = Math.max(0, totalTax - savings)
     
-    setEstimatedTax(finalTax)
-    setTaxSavings(creditsSavings)
-    
-    // Update global state
-    setTaxPrediction({
-      productType,
-      tonnage,
-      productionMethod,
-      carbonIntensity: carbonIntensity,
-      destinationCountry,
+    return {
       estimatedTax: finalTax,
-      carbonCreditsApplied: creditsToApply,
-    })
-  }, [productType, tonnage, productionMethod, carbonIntensity, destinationCountry, applyCredits, availableCredits, setTaxPrediction])
+      taxSavings: savings,
+      creditsToApply: credits,
+    }
+  }, [productType, tonnage, productionMethod, carbonIntensity, applyCredits, availableCredits])
+
+  // Update global state only when values actually change, using setTimeout to break render cycle
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setTaxPrediction({
+        productType,
+        tonnage,
+        productionMethod,
+        carbonIntensity,
+        destinationCountry,
+        estimatedTax,
+        carbonCreditsApplied: creditsToApply,
+      })
+    }, 0)
+    
+    return () => clearTimeout(timeoutId)
+  }, [productType, tonnage, productionMethod, carbonIntensity, destinationCountry, estimatedTax, creditsToApply, setTaxPrediction])
 
   return (
     <TooltipProvider>

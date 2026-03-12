@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useCallback } from "react"
 
 export interface TaxPrediction {
   productType: string
@@ -92,10 +92,23 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return Math.max(0, totalTax - creditsValue)
   }
 
-  const setTaxPrediction = (prediction: TaxPrediction) => {
-    const estimatedTax = calculateEstimatedTax(prediction)
-    setTaxPredictionState({ ...prediction, estimatedTax })
-  }
+  const setTaxPrediction = useCallback((prediction: TaxPrediction) => {
+    setTaxPredictionState((prev) => {
+      // Only update if values actually changed to prevent unnecessary re-renders
+      if (
+        prev.productType === prediction.productType &&
+        prev.tonnage === prediction.tonnage &&
+        prev.productionMethod === prediction.productionMethod &&
+        prev.carbonIntensity === prediction.carbonIntensity &&
+        prev.destinationCountry === prediction.destinationCountry &&
+        prev.carbonCreditsApplied === prediction.carbonCreditsApplied
+      ) {
+        return prev
+      }
+      const estimatedTax = calculateEstimatedTax(prediction)
+      return { ...prediction, estimatedTax }
+    })
+  }, [])
 
   const applyCreditToShipment = (creditId: string) => {
     setCarbonCredits((prev) =>

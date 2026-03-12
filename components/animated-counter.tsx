@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 interface AnimatedCounterProps {
   value: number
@@ -12,18 +12,25 @@ interface AnimatedCounterProps {
 
 export function AnimatedCounter({
   value,
-  duration = 1000,
+  duration = 800,
   prefix = "",
   suffix = "",
   decimals = 0,
 }: AnimatedCounterProps) {
-  const [displayValue, setDisplayValue] = useState(0)
+  const [displayValue, setDisplayValue] = useState(value)
+  const previousValueRef = useRef(value)
+  const animationRef = useRef<number | null>(null)
 
   useEffect(() => {
-    let startTime: number | null = null
-    let animationId: number
-    const startValue = displayValue
+    // Skip animation if value hasn't changed significantly
+    if (Math.abs(value - previousValueRef.current) < 0.01) {
+      setDisplayValue(value)
+      return
+    }
+
+    const startValue = previousValueRef.current
     const endValue = value
+    let startTime: number | null = null
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp
@@ -36,18 +43,24 @@ export function AnimatedCounter({
       setDisplayValue(currentValue)
 
       if (progress < 1) {
-        animationId = requestAnimationFrame(animate)
+        animationRef.current = requestAnimationFrame(animate)
+      } else {
+        previousValueRef.current = endValue
       }
     }
 
-    animationId = requestAnimationFrame(animate)
+    // Cancel any existing animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+    }
+
+    animationRef.current = requestAnimationFrame(animate)
     
     return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId)
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration])
 
   return (
