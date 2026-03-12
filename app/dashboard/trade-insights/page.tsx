@@ -44,12 +44,17 @@ const carbonPriceTrendData = [
 ]
 
 const profitabilityData = [
-  { sector: "Steel", preCABAM: 15, postCBAM: 8, taxImpact: -7 },
-  { sector: "Aluminum", preCABAM: 18, postCBAM: 11, taxImpact: -7 },
-  { sector: "Cement", preCABAM: 12, postCBAM: 6, taxImpact: -6 },
-  { sector: "Fertilizers", preCABAM: 20, postCBAM: 14, taxImpact: -6 },
-  { sector: "Hydrogen", preCABAM: 22, postCBAM: 18, taxImpact: -4 },
+  { sector: "Steel", preCABAM: 15, postCBAM: 8, taxImpact: -7, color1: "#3b82f6", color2: "#22c55e" },
+  { sector: "Aluminum", preCABAM: 18, postCBAM: 11, taxImpact: -7, color1: "#8b5cf6", color2: "#14b8a6" },
+  { sector: "Cement", preCABAM: 12, postCBAM: 6, taxImpact: -6, color1: "#ec4899", color2: "#f59e0b" },
+  { sector: "Fertilizers", preCABAM: 20, postCBAM: 14, taxImpact: -6, color1: "#f97316", color2: "#06b6d4" },
+  { sector: "Hydrogen", preCABAM: 22, postCBAM: 18, taxImpact: -4, color1: "#6366f1", color2: "#84cc16" },
 ]
+
+const PROFITABILITY_COLORS = {
+  preCBAM: ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#6366f1"],
+  postCBAM: ["#22c55e", "#14b8a6", "#f59e0b", "#06b6d4", "#84cc16"],
+}
 
 const exportVolumeData = [
   { year: "2020", steel: 8.2, aluminum: 3.1, cement: 1.8, fertilizers: 2.5 },
@@ -274,31 +279,73 @@ export default function TradeInsightsPage() {
               <CardDescription>Profit margin comparison before and after CBAM (percentage points)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div className="h-[450px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={profitabilityData} layout="vertical">
+                  <BarChart data={profitabilityData} layout="vertical" barGap={8}>
+                    <defs>
+                      {profitabilityData.map((entry, index) => (
+                        <linearGradient key={`gradient-pre-${index}`} id={`colorPre${index}`} x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={PROFITABILITY_COLORS.preCBAM[index]} stopOpacity={0.8} />
+                          <stop offset="100%" stopColor={PROFITABILITY_COLORS.preCBAM[index]} stopOpacity={1} />
+                        </linearGradient>
+                      ))}
+                      {profitabilityData.map((entry, index) => (
+                        <linearGradient key={`gradient-post-${index}`} id={`colorPost${index}`} x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={PROFITABILITY_COLORS.postCBAM[index]} stopOpacity={0.8} />
+                          <stop offset="100%" stopColor={PROFITABILITY_COLORS.postCBAM[index]} stopOpacity={1} />
+                        </linearGradient>
+                      ))}
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" domain={[0, 25]} tickFormatter={(v) => `${v}%`} />
                     <YAxis dataKey="sector" type="category" width={100} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={customTooltipStyle} />
+                    <Tooltip 
+                      contentStyle={customTooltipStyle} 
+                      formatter={(value: number, name: string) => [`${value}%`, name]}
+                    />
                     <Legend />
                     <Bar 
                       dataKey="preCABAM" 
-                      name="Pre-CBAM Margin (%)" 
-                      fill="#3b82f6" 
-                      radius={4}
-                    />
+                      name="Pre-CBAM Margin" 
+                      radius={[0, 6, 6, 0]}
+                      barSize={24}
+                    >
+                      {profitabilityData.map((entry, index) => (
+                        <Cell key={`cell-pre-${index}`} fill={`url(#colorPre${index})`} />
+                      ))}
+                    </Bar>
                     <Bar 
                       dataKey="postCBAM" 
-                      name="Post-CBAM Margin (%)" 
-                      fill="#10b981" 
-                      radius={4}
-                    />
+                      name="Post-CBAM Margin" 
+                      radius={[0, 6, 6, 0]}
+                      barSize={24}
+                    >
+                      {profitabilityData.map((entry, index) => (
+                        <Cell key={`cell-post-${index}`} fill={`url(#colorPost${index})`} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
+
+          {/* Impact Summary Cards */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {profitabilityData.map((item, index) => (
+              <Card key={item.sector} className="overflow-hidden">
+                <div className="h-1" style={{ background: `linear-gradient(to right, ${PROFITABILITY_COLORS.preCBAM[index]}, ${PROFITABILITY_COLORS.postCBAM[index]})` }} />
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium text-foreground">{item.sector}</p>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-lg font-bold" style={{ color: PROFITABILITY_COLORS.postCBAM[index] }}>{item.postCBAM}%</span>
+                    <span className="text-xs text-red-500">{item.taxImpact}%</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Post-CBAM margin</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
         {/* Export Trends Tab */}

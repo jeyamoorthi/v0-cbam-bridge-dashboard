@@ -79,12 +79,21 @@ export default function TaxPredictorPage() {
   const [productType, setProductType] = useState("steel")
   const [tonnage, setTonnage] = useState(1000)
   const [productionMethod, setProductionMethod] = useState("blast_furnace")
-  const [carbonIntensity, setCarbonIntensity] = useState([1.8])
+  const [carbonIntensity, setCarbonIntensity] = useState(1.8)
   const [destinationCountry, setDestinationCountry] = useState("germany")
   const [applyCredits, setApplyCredits] = useState(false)
 
   const [estimatedTax, setEstimatedTax] = useState(0)
   const [taxSavings, setTaxSavings] = useState(0)
+
+  // Handle product type change - reset production method
+  const handleProductTypeChange = (value: string) => {
+    setProductType(value)
+    const methods = productionMethods[value]
+    if (methods && methods.length > 0) {
+      setProductionMethod(methods[0].value)
+    }
+  }
 
   // Calculate tax whenever inputs change
   useEffect(() => {
@@ -95,10 +104,10 @@ export default function TaxPredictorPage() {
     const methodMultiplier = method?.multiplier || 1.0
     
     // Total tax = tonnage × carbon intensity × base rate × method multiplier
-    const totalTax = tonnage * carbonIntensity[0] * baseRate * methodMultiplier
+    const totalTax = tonnage * carbonIntensity * baseRate * methodMultiplier
     
     // Calculate savings from carbon credits
-    const creditsToApply = applyCredits ? Math.min(availableCredits, tonnage * carbonIntensity[0]) : 0
+    const creditsToApply = applyCredits ? Math.min(availableCredits, tonnage * carbonIntensity) : 0
     const creditsSavings = creditsToApply * baseRate
     
     const finalTax = Math.max(0, totalTax - creditsSavings)
@@ -111,20 +120,12 @@ export default function TaxPredictorPage() {
       productType,
       tonnage,
       productionMethod,
-      carbonIntensity: carbonIntensity[0],
+      carbonIntensity: carbonIntensity,
       destinationCountry,
       estimatedTax: finalTax,
       carbonCreditsApplied: creditsToApply,
     })
   }, [productType, tonnage, productionMethod, carbonIntensity, destinationCountry, applyCredits, availableCredits, setTaxPrediction])
-
-  // Reset production method when product type changes
-  useEffect(() => {
-    const methods = productionMethods[productType]
-    if (methods && methods.length > 0) {
-      setProductionMethod(methods[0].value)
-    }
-  }, [productType])
 
   return (
     <TooltipProvider>
@@ -162,7 +163,7 @@ export default function TaxPredictorPage() {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <Select value={productType} onValueChange={setProductType}>
+                <Select value={productType} onValueChange={handleProductTypeChange}>
                   <SelectTrigger id="productType">
                     <SelectValue placeholder="Select product type" />
                   </SelectTrigger>
@@ -240,11 +241,11 @@ export default function TaxPredictorPage() {
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <span className="font-semibold text-primary">{carbonIntensity[0].toFixed(2)} tCO₂/t</span>
+                  <span className="font-semibold text-primary">{carbonIntensity.toFixed(2)} tCO₂/t</span>
                 </div>
                 <Slider
-                  value={carbonIntensity}
-                  onValueChange={setCarbonIntensity}
+                  value={[carbonIntensity]}
+                  onValueChange={(value) => setCarbonIntensity(value[0])}
                   min={0.1}
                   max={3.0}
                   step={0.01}
@@ -350,7 +351,7 @@ export default function TaxPredictorPage() {
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">
                   <AnimatedCounter 
-                    value={tonnage * carbonIntensity[0]} 
+                    value={tonnage * carbonIntensity} 
                     suffix=" tCO₂" 
                     decimals={0} 
                   />
@@ -376,7 +377,7 @@ export default function TaxPredictorPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Carbon Intensity</span>
-                    <span className="font-medium">{carbonIntensity[0].toFixed(2)} tCO₂/t</span>
+                    <span className="font-medium">{carbonIntensity.toFixed(2)} tCO₂/t</span>
                   </div>
                   <div className="border-t border-border pt-3">
                     <div className="flex justify-between font-medium">
