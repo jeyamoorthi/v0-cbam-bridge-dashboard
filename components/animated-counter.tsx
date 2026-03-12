@@ -21,6 +21,7 @@ export function AnimatedCounter({
 
   useEffect(() => {
     let startTime: number | null = null
+    let animationId: number
     const startValue = displayValue
     const endValue = value
 
@@ -35,11 +36,18 @@ export function AnimatedCounter({
       setDisplayValue(currentValue)
 
       if (progress < 1) {
-        requestAnimationFrame(animate)
+        animationId = requestAnimationFrame(animate)
       }
     }
 
-    requestAnimationFrame(animate)
+    animationId = requestAnimationFrame(animate)
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration])
 
   return (
