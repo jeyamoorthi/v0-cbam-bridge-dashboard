@@ -34,12 +34,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem("cbam_user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    setMounted(true)
+    // Check for existing session only on client
+    if (typeof window !== "undefined") {
+      try {
+        const storedUser = localStorage.getItem("cbam_user")
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
     }
     setIsLoading(false)
   }, [])
@@ -95,6 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(updatedUser)
       localStorage.setItem("cbam_user", JSON.stringify(updatedUser))
     }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
