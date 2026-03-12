@@ -155,8 +155,10 @@ export default function TaxPredictorPage() {
                 <div className="flex items-center gap-2">
                   <Label htmlFor="productType">Product Type</Label>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                    <TooltipTrigger asChild>
+                      <button type="button" className="inline-flex">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Select the category of goods being exported to the EU</p>
@@ -182,8 +184,10 @@ export default function TaxPredictorPage() {
                 <div className="flex items-center gap-2">
                   <Label htmlFor="tonnage">Export Tonnage</Label>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                    <TooltipTrigger asChild>
+                      <button type="button" className="inline-flex">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Total tonnes of product to be exported</p>
@@ -205,8 +209,10 @@ export default function TaxPredictorPage() {
                 <div className="flex items-center gap-2">
                   <Label htmlFor="productionMethod">Production Method</Label>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                    <TooltipTrigger asChild>
+                      <button type="button" className="inline-flex">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Manufacturing process affects carbon intensity</p>
@@ -233,8 +239,10 @@ export default function TaxPredictorPage() {
                   <div className="flex items-center gap-2">
                     <Label>Carbon Intensity (tCO₂ per tonne product)</Label>
                     <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
+                      <TooltipTrigger asChild>
+                        <button type="button" className="inline-flex">
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Embedded emissions per unit of product</p>
@@ -263,8 +271,10 @@ export default function TaxPredictorPage() {
                 <div className="flex items-center gap-2">
                   <Label htmlFor="destinationCountry">Destination Country</Label>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                    <TooltipTrigger asChild>
+                      <button type="button" className="inline-flex">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>EU member state for import declaration</p>
